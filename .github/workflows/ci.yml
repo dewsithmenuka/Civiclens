@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: civiclens
+          POSTGRES_PASSWORD: civiclens
+          POSTGRES_DB: civiclens
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U civiclens"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://civiclens:civiclens@localhost:5432/civiclens
+      REDIS_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck all Node workspaces
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Migrate clean database from zero
+        run: npm run db:migrate
+      - name: Verify migrations are idempotent
+        run: npm run db:migrate
+      - name: API + PostGIS + realtime tests
+        run: npm run test:e2e
+      - name: Build all Node workspaces
+        run: npm run build
+
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Analyze Flutter app
+        working-directory: mobile
+        run: flutter analyze
+      - name: Flutter tests
+        working-directory: mobile
+        run: flutter test
+      - name: Build Flutter web
+        working-directory: mobile
+        run: >-
+          flutter build web
+          --dart-define=API_BASE=https://api.example.invalid
+          --dart-define=PRIVACY_POLICY_URL=https://example.invalid/privacy
+
+  admin:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: civiclens
+          POSTGRES_PASSWORD: civiclens
+          POSTGRES_DB: civiclens
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U civiclens"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://civiclens:civiclens@localhost:5432/civiclens
+      PGPASSWORD: civiclens
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck -w @civiclens/admin
+      - name: Unit tests
+        run: npm test -w @civiclens/admin
+      - name: Build contracts and API, migrate
+        run: |
+          npm run build -w @civiclens/contracts
+          npm run build -w @civiclens/backend
+          npm run db:migrate
+      - name: Start the API in test mode (no per-IP rate limits)
+        run: |
+          (cd backend && NODE_ENV=test node dist/main.js > /tmp/api.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf localhost:3000/health/live && break; sleep 1; done
+      - name: Create the admin account the E2E needs
+        run: |
+          curl -sf -X POST localhost:3000/api/v1/auth/register -H 'Content-Type: application/json' \
+            -d '{"email":"ci-admin@example.com","password":"correct-horse-battery","displayName":"CI Admin"}'
+          psql -h localhost -U civiclens -d civiclens -c "UPDATE users SET role='ADMIN' WHERE email='ci-admin@example.com'"
+      - name: Build and start the dashboard
+        run: |
+          npm run build -w @civiclens/admin
+          (cd admin && API_URL=http://localhost:3000 COOKIE_SECURE=false npx next start -p 3001 > /tmp/admin.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf -o /dev/null localhost:3001/login && break; sleep 1; done
+      - name: Dashboard end-to-end tests
+        run: cd admin && E2E_ADMIN_EMAIL=ci-admin@example.com E2E_ADMIN_PASSWORD=correct-horse-battery node --test test/e2e.mjs
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Dependency audit (high+)
+        run: npm audit --audit-level=high
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f infrastructure/docker/backend.Dockerfile -t civiclens-api:ci .

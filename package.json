@@ -1,0 +1,60 @@
+{
+  "name": "civiclens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Real-time community infrastructure intelligence — monorepo",
+  "workspaces": [
+    "packages/*",
+    "backend",
+    "admin"
+  ],
+  "overrides": {
+    "@nestjs/common": {
+      ".": "^11.2.8",
+      "file-type": "21.3.4"
+    },
+    "@nestjs/core": "^11.2.8",
+    "@nestjs/platform-express": {
+      ".": "^11.2.8"
+    },
+    "@nestjs/platform-express@11.2.8": {
+      "multer": "2.5.0"
+    },
+    "@nestjs/platform-socket.io": "^11.2.8",
+    "@nestjs/websockets": "^11.2.8",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/swagger": {
+      "js-yaml": "5.5.0"
+    },
+    "express": {
+      "qs": "6.16.1"
+    },
+    "gaxios": {
+      "uuid": "11.1.1"
+    },
+    "postcss": "^8.5.23",
+    "rimraf@5": {
+      "glob": "10.5.0"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build -w @civiclens/contracts && npm run build -w @civiclens/backend && npm run build -w @civiclens/admin",
+    "typecheck": "npm run build -w @civiclens/contracts && npm run typecheck -w @civiclens/backend && npm run typecheck -w @civiclens/admin",
+    "test": "npm run build -w @civiclens/contracts && npm test -w @civiclens/backend && npm test -w @civiclens/admin",
+    "test:e2e": "npm run build -w @civiclens/contracts && npm run test:e2e -w @civiclens/backend",
+    "infra:up": "docker compose up -d postgres redis",
+    "infra:down": "docker compose down",
+    "db:migrate": "npm run migrate -w @civiclens/backend",
+    "dev:api": "npm run start:dev -w @civiclens/backend",
+    "dev:admin": "npm run dev -w @civiclens/admin"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.2.8",
+    "@nestjs/core": "^11.2.8",
+    "@nestjs/websockets": "^11.2.8",
+    "uuid": "^11.1.1"
+  }
+}

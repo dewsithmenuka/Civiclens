@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: civiclens-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./infrastructure/docker/backend.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: TRUST_PROXY
+        sync: false
+
+  - type: web
+    name: civiclens-admin
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./infrastructure/docker/admin.Dockerfile
+    dockerContext: .
+    healthCheckPath: /login
+    envVars:
+      - key: API_URL
+        sync: false
+      - key: APP_ORIGIN
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"

@@ -1,0 +1,82 @@
+name: civiclens
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: civiclens-postgres
+    environment:
+      POSTGRES_USER: civiclens
+      POSTGRES_PASSWORD: civiclens
+      POSTGRES_DB: civiclens
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U civiclens -d civiclens"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: civiclens-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+    container_name: civiclens-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-3000}
+      DATABASE_URL: postgres://civiclens:civiclens@postgres:5432/civiclens
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      JWT_SECRET: ${JWT_SECRET:-change-me-dev-only-change-me-dev-only}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3001}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL:-15m}
+      REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-30}
+      DUPLICATE_RADIUS_M: ${DUPLICATE_RADIUS_M:-50}
+      DUPLICATE_WINDOW_HOURS: ${DUPLICATE_WINDOW_HOURS:-24}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
+      SMTP_URL: ${SMTP_URL:-}
+      MAIL_FROM: ${MAIL_FROM:-CivicLens <no-reply@civiclens.local>}
+      REQUIRE_VERIFIED_EMAIL: ${REQUIRE_VERIFIED_EMAIL:-false}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-}
+      FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-}
+      STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-}
+      STORAGE_REGION: ${STORAGE_REGION:-auto}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-}
+      STORAGE_PUBLIC_BASE_URL: ${STORAGE_PUBLIC_BASE_URL:-}
+    ports:
+      - "3000:3000"
+
+  admin:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/admin.Dockerfile
+    container_name: civiclens-admin
+    depends_on:
+      - api
+    environment:
+      API_URL: http://api:3000
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3001}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    ports:
+      - "3001:3001"
+
+volumes:
+  pgdata:

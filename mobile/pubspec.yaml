@@ -1,0 +1,59 @@
+name: civiclens
+description: CivicLens — real-time community infrastructure intelligence.
+publish_to: none
+version: 0.2.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+  dio: ^5.5.0
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.2.3
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^12.0.0
+  image_picker: ^1.1.2
+  socket_io_client: ^3.0.2
+  connectivity_plus: ^6.0.3
+  uuid: ^4.4.2
+  path_provider: ^2.1.3
+  google_sign_in: ^6.2.2
+  firebase_core: ^3.6.0
+  firebase_messaging: ^15.1.3
+  share_plus: ^12.0.2
+  url_launcher: ^6.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: assets/branding/civiclens-icon.png
+  adaptive_icon_background: "#F7F7F4"
+  adaptive_icon_foreground: assets/branding/civiclens-foreground.png
+  web:
+    generate: true
+    image_path: assets/branding/civiclens-icon.png
+    background_color: "#F7F7F4"
+    theme_color: "#2F7D67"
+  macos:
+    generate: true
+    image_path: assets/branding/civiclens-icon.png
+  windows:
+    generate: true
+    image_path: assets/branding/civiclens-icon.png
+    icon_size: 48

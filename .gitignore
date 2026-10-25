@@ -1,0 +1,26 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.log
+*.dump
+*.backup
+*.sqlite
+*.sqlite3
+*.db
+.DS_Store
+.idea/
+.vscode/
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Generated.xcconfig
+mobile/ios/Flutter/flutter_export_environment.sh
+mobile/ios/ServiceDefinitions.json
+# Next.js
+admin/.next/
