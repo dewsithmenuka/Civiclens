@@ -12,6 +12,7 @@ coverage/
 *.sqlite3
 *.db
 .DS_Store
+/CivicLens_Master_Project_Document.docx
 .idea/
 .vscode/
 # Flutter

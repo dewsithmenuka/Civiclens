@@ -50,8 +50,17 @@ flutter build appbundle \
   --dart-define=PRIVACY_POLICY_URL=https://YOUR_PUBLIC_PRIVACY_POLICY_URL
 ```
 
-The app blocks release startup unless both values are HTTPS. Android/iOS signing credentials must be configured
-separately and kept out of the repository.
+The app and `mobile/tool/verify_release_config.dart` reject non-HTTPS, local, private-network, and reserved example
+hosts. The tag-triggered GitHub release workflow requires the repository variables `MOBILE_API_BASE` (the API origin,
+without `/api/v1`) and `PRIVACY_POLICY_URL` (a published, reviewed policy URL), plus these Actions secrets:
+`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`. It validates
+the URLs, builds a signed Android App Bundle, and attaches it to the GitHub release. Generate and back up the upload
+keystore securely, encode it for the secret, and never commit the keystore or its passwords. iOS distribution still
+requires separate Apple signing and provisioning.
+
+The repository does not contain a published privacy-policy page or product screenshots yet. Before a public app
+release, publish a policy at the configured URL and capture genuine screenshots from the hosted app with demo data;
+do not use the reserved CI URLs or real user information.
 
 **Release:** tag `vX.Y.Z` → `release.yml` creates a GitHub release with generated notes. Configure Android keystore
 credentials and iOS signing/provisioning outside source control before distributing signed packages.

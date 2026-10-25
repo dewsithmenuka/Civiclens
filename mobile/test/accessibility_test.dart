@@ -27,22 +27,50 @@ void main() {
   test('release config requires HTTPS API and policy origins', () {
     expect(
       isSafeReleaseConfig(
-        apiBase: 'https://api.example.com',
-        privacyPolicyUrl: 'https://example.com/privacy',
+        apiBase: 'https://api.civiclens.app',
+        privacyPolicyUrl: 'https://civiclens.app/privacy',
       ),
       isTrue,
     );
     expect(
       isSafeReleaseConfig(
-        apiBase: 'http://api.example.com',
-        privacyPolicyUrl: 'https://example.com/privacy',
+        apiBase: 'http://api.civiclens.app',
+        privacyPolicyUrl: 'https://civiclens.app/privacy',
       ),
       isFalse,
     );
     expect(
       isSafeReleaseConfig(
-        apiBase: 'https://api.example.com',
+        apiBase: 'https://api.civiclens.app',
         privacyPolicyUrl: '',
+      ),
+      isFalse,
+    );
+    expect(
+      isSafeReleaseConfig(
+        apiBase: 'https://api.example.invalid',
+        privacyPolicyUrl: 'https://civiclens.app/privacy',
+      ),
+      isFalse,
+    );
+    expect(
+      isSafeReleaseConfig(
+        apiBase: 'https://localhost:3000',
+        privacyPolicyUrl: 'https://civiclens.app/privacy',
+      ),
+      isFalse,
+    );
+    expect(
+      isSafeReleaseConfig(
+        apiBase: 'https://localhost.:3000',
+        privacyPolicyUrl: 'https://civiclens.app/privacy',
+      ),
+      isFalse,
+    );
+    expect(
+      isSafeReleaseConfig(
+        apiBase: 'https://192.168.1.10',
+        privacyPolicyUrl: 'https://civiclens.app/privacy',
       ),
       isFalse,
     );

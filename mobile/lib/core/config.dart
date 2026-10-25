@@ -1,4 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'release_config.dart';
+
+export 'release_config.dart' show isSafeReleaseConfig;
 
 /// Override per build:  flutter run --dart-define=API_BASE=http://localhost:3000
 /// Android emulator: http://10.0.2.2:3000 · iOS simulator: http://localhost:3000 ·
@@ -11,24 +14,6 @@ final apiV1 = '$apiBase/api/v1';
 
 /// Set for release builds so the Account screen can link to the published policy.
 const privacyPolicyUrl = String.fromEnvironment('PRIVACY_POLICY_URL');
-bool isSafeReleaseConfig({
-  required String apiBase,
-  required String privacyPolicyUrl,
-}) {
-  bool isHttpsUrl(String value, {bool originOnly = false}) {
-    final uri = Uri.tryParse(value);
-    return uri != null &&
-        uri.scheme == 'https' &&
-        uri.host.isNotEmpty &&
-        uri.userInfo.isEmpty &&
-        (!originOnly || uri.path.isEmpty) &&
-        !uri.hasQuery &&
-        !uri.hasFragment;
-  }
-
-  return isHttpsUrl(apiBase, originOnly: true) && isHttpsUrl(privacyPolicyUrl);
-}
-
 final apiIsProductionSafe = kDebugMode ||
     isSafeReleaseConfig(
       apiBase: _configuredApiBase,

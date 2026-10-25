@@ -7,7 +7,7 @@ COPY packages/contracts/package.json packages/contracts/
 RUN npm ci
 COPY packages/contracts packages/contracts
 COPY backend backend
-RUN npm run build
+RUN npm run build -w @civiclens/contracts && npm run build -w @civiclens/backend
 
 FROM node:20-bookworm-slim AS runtime
 ENV NODE_ENV=production

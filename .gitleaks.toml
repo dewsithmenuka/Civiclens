@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "CocoaPods lockfile contains dependency checksums that match generic secret patterns."
+paths = [
+  '''mobile/ios/Podfile.lock''',
+]
