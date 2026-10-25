@@ -1,5 +1,9 @@
 # CivicLens
 
+[![CI](https://github.com/dewsithmenuka/Civiclens/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dewsithmenuka/Civiclens/actions/workflows/ci.yml)
+
+<img src="mobile/assets/branding/civiclens-icon.png" alt="CivicLens app icon" width="160">
+
 **Real-time community infrastructure intelligence.**
 *See what's happening. Make it visible.*
 
